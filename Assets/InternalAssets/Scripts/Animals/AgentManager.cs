@@ -19,9 +19,15 @@ public class AgentManager : MonoBehaviour
     public float alignmentWeight;
     public float cohesionWeight;
     
+    [Header("Gathering Settings")]
+    public float gatheringDistanceThreshold = 10f;
+    
+    
     private NativeArray<Vector3> agentPositions;
     private NativeArray<Vector3> agentDirections;
     private NativeArray<float> agentSpeeds;
+    
+    
     
     private void Start()
     {
@@ -30,7 +36,7 @@ public class AgentManager : MonoBehaviour
 
     private void Update()
     {
-        ExecuteFlockingJob();
+        ExecuteAppropriateJob();
         UpdateAgentsInScene();
     }
 
@@ -92,5 +98,41 @@ public class AgentManager : MonoBehaviour
         agentPositions.Dispose();
         agentDirections.Dispose();
         agentSpeeds.Dispose();
+    }
+    
+    private void ExecuteAppropriateJob()
+    {
+        bool isGathering = AnyAgentNearTarget();
+
+        if (isGathering)
+        {
+            ExecuteGatherJob();
+        }
+        else
+        {
+            ExecuteFlockingJob();
+        }
+    }
+
+    private bool AnyAgentNearTarget()
+    {
+        for (int i = 0; i < agents.Length; i++)
+        {
+            if (Vector3.Distance(agentPositions[i], target.position) <= gatheringDistanceThreshold)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void ExecuteGatherJob()
+    {
+        GatherJob gatherJob = new GatherJob
+        {
+           
+        };
+        JobHandle gatherHandle = gatherJob.Schedule(agentPositions.Length, 64);
+        gatherHandle.Complete();
     }
 }
