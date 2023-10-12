@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84d8defc4145d9d4c94f31e003f6c540, type: 3}
+  m_Name: FlockingData
+  m_EditorClassIdentifier: 
+  separationRadius: 3
+  alignmentRadius: 5
+  cohesionRadius: 2
+  separationWeight: 1.5
+  alignmentWeight: 1
+  cohesionWeight: 1
+  turnSmoothness: 15
+  speed: 2

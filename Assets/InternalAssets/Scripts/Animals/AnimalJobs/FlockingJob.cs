@@ -4,55 +4,50 @@ using Unity.Burst;
 using Unity.Collections;
 
 [BurstCompile]
-public struct FlockingJob : IJobParallelFor
+public struct FlockingJob : IJobParallelFor, IAnimalJob
 {
     public NativeArray<Vector3> positions;
     public NativeArray<Vector3> directions;
     public NativeArray<float> speeds;
     public Vector3 target;
     public float deltaTime;
-    public float separationRadius;
-    public float alignmentRadius;
-    public float cohesionRadius;
-    public float turnSmoothness;
-    
-    public float separationWeight;
-    public float alignmentWeight;
-    public float cohesionWeight;
 
+    public BehaviourParams behaviourParams;
+    
     public void Execute(int index)
     {
-        Vector3 separationSum = SeparationCalculator.CalculateSeparation(index, positions, separationRadius, out int separationCount);
-        Vector3 alignmentSum = AligmentCalculator.CalculateAlignment(index, positions, directions, alignmentRadius, out int alignmentCount);
-        Vector3 cohesionSum = FlockingCalculator.CalculateCohesion(index, positions, cohesionRadius, out int cohesionCount);
+        Vector3 separationSum = SeparationCalculator.CalculateSeparation(index, positions, behaviourParams.separationRadius, out int separationCount);
+        Vector3 alignmentSum = AligmentCalculator.CalculateAlignment(index, positions, directions, behaviourParams.alignmentRadius, out int alignmentCount);
+        Vector3 cohesionSum = FlockingCalculator.CalculateCohesion(index, positions, behaviourParams.cohesionRadius, out int cohesionCount);
+        Vector3 desiredDirection = DirectionCalcilator.CalculateDesiredDirection(index,separationSum, alignmentSum, cohesionSum, separationCount, alignmentCount, cohesionCount, positions, behaviourParams);
         
-        
-        Vector3 desiredDirection = Vector3.zero;
-        if(separationCount > 0) 
-        {
-            separationSum /= separationCount;
-            desiredDirection += separationWeight * separationSum.normalized;
-        }
-
-        if(alignmentCount > 0) 
-        {
-            alignmentSum /= alignmentCount;
-            desiredDirection += alignmentWeight * alignmentSum.normalized;
-        }
-
-        if(cohesionCount > 0) 
-        {
-            cohesionSum /= cohesionCount;
-            desiredDirection += cohesionWeight * (cohesionSum - positions[index]).normalized;
-        }
-        desiredDirection = desiredDirection.normalized;
-        
-        
+        UpdateAgentDirectionAndPosition(index, desiredDirection);
+    }
+    
+    private void UpdateAgentDirectionAndPosition(int index, Vector3 desiredDirection)
+    {
         Vector3 toTarget = target - positions[index];
-        desiredDirection = Vector3.Lerp(desiredDirection, toTarget.normalized, 0.1f);
+        desiredDirection = Vector3.Lerp(desiredDirection, toTarget.normalized, 0.1f); 
 
-        Vector3 newDirection = Vector3.Slerp(directions[index], desiredDirection, turnSmoothness * deltaTime);
+        Vector3 newDirection = Vector3.Slerp(directions[index], desiredDirection, behaviourParams.turnSmoothness * deltaTime);
         positions[index] += newDirection * speeds[index] * deltaTime;
         directions[index] = newDirection;
+    }
+    
+    public JobHandle Execute(
+        NativeArray<Vector3> positions,
+        NativeArray<Vector3> directions,
+        NativeArray<float> speeds,
+        Vector3 targetPosition,
+        float deltaTime,
+        JobHandle inputDeps)
+    {
+        this.positions = positions;
+        this.directions = directions;
+        this.speeds = speeds;
+        this.target = targetPosition;
+        this.deltaTime = deltaTime;
+
+        return this.Schedule(positions.Length, 64, inputDeps);
     }
 }
