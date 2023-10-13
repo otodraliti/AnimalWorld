@@ -9,9 +9,5 @@ public class AnimalReference : MonoBehaviour
         transform.position = newPosition;
         transform.forward = newDirection;
     }
-
-    public void ReachedTarget()
-    {
-        Debug.Log(gameObject.name + " Reached");
-    }
+    
 }

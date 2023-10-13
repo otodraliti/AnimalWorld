@@ -22,7 +22,7 @@ public class AnimalManager : MonoBehaviour
 
     #region Private Settings
     
-    private NativeArray<Vector3> targetGatheringPositions;
+
     private NativeArray<Vector3> agentPositions;
     private NativeArray<Vector3> agentDirections;
     private NativeArray<float> agentSpeeds;
@@ -42,7 +42,11 @@ public class AnimalManager : MonoBehaviour
     
     private void Update()
     {
-        if(agents == null) return;
+        if (agents == null)
+        {
+            DisposeNativeArrays();
+            return;
+        }
         if (AnyAgentNearTarget(gatheringDistanceThreshold))
         {
             SetBehaviour(null);
@@ -153,7 +157,7 @@ public class AnimalManager : MonoBehaviour
         {
             if (Vector3.Distance(agentPositions[i], target.position) <= Threshold)
             {
-                agents[i].GetComponent<AnimalReference>().ReachedTarget();
+                agents[i].GetComponent<Animal_SM>().GatherState(target.GetComponent<GatherPoint>());
                 RemoveFromList(agents[i]);
                 return false;
             }
@@ -194,7 +198,6 @@ public class AnimalManager : MonoBehaviour
         agentPositions.Dispose();
         agentDirections.Dispose();
         agentSpeeds.Dispose();
-        targetGatheringPositions.Dispose();
     }
 
     #endregion
